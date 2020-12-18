@@ -43,7 +43,7 @@ func main() {
 	modules.HandleError(err, "Error creating YouTube client")
 
 	modules.SearchQuery(service)
-	fmt.Printf("%s", modules.ReverseRunes("Hello"))
+
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		payload := response{ID: "1234", Name: "Bryce"}
 		w.Header().Set("Content-Type", "application/json")
