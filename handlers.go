@@ -48,5 +48,8 @@ func (h *SearchRequest) SearchHandler(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(h.ID)
 		fmt.Fprint(w)
 	}
+}
+
+func ServeStaticSite(w http.ResponseWriter, r *http.Request) {
 
 }

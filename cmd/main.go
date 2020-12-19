@@ -2,12 +2,13 @@ package main
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
+	"net/http"
 
 	modules "github.com/brycedouglasjames/yougoclient"
-	"github.com/gin-gonic/contrib/static"
-	"github.com/gin-gonic/gin"
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/youtube/v3"
 )
@@ -45,27 +46,22 @@ func main() {
 	//instantiate API query
 	modules.SearchQuery(service)
 
-	/*************HANDLE*************
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+	/*************HANDLE*************/
+
+	fs := http.FileServer(http.Dir("./site"))
+	http.Handle("/", fs)
+
+	http.HandleFunc("/hello", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode("Hello world!")
 		fmt.Fprint(w)
+
 	})
 
 	//handler for search results
 	search := &modules.SearchRequest{ID: "nil"}
 	http.HandleFunc("/query", search.SearchHandler)
-	log.Fatal(http.ListenAndServe(":8081", nil))*/
-
-	// Set the router as the default one shipped with Gin
-	router := gin.Default()
-
-	// Serve frontend static files
-	router.Use(static.Serve("/", static.LocalFile("./site", true)))
-
-	// Start and run the server
-	router.Run(":8081")
-
+	log.Fatal(http.ListenAndServe(":8080", nil))
 }
 
 //TODO user integration

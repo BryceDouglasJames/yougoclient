@@ -18,9 +18,10 @@ import (
 
 var (
 	//users      = map[int]*User{}
+	//CurrentVideos = []string{}
 	seq        = 1
 	query      = flag.String("query", "pewdiepie", "Search term")
-	maxResults = flag.Int64("max-results", 25, "Max YouTube results")
+	maxResults = flag.Int64("max-results", 4, "Max YouTube results")
 )
 
 func CreateClient(ctx context.Context, config *oauth2.Config) *http.Client {
@@ -89,8 +90,6 @@ func SaveToken(filename string, token *oauth2.Token) {
 
 /*YOUTUBE QUERY FUNCTION*/
 func SearchQuery(service *youtube.Service) {
-	var something string
-
 	call := service.Search.List([]string{"id,snippet"}).Q(*query).MaxResults(*maxResults)
 	response, err := call.Do()
 	HandleError(err, "")
@@ -103,23 +102,32 @@ func SearchQuery(service *youtube.Service) {
 		switch item.Id.Kind {
 		case "youtube#video":
 			videos[item.Id.VideoId] = item.Snippet.Title
-			something = item.Id.VideoId
-			fmt.Printf("%s", item.Snippet.Title)
+			//fmt.Printf("%s", item.Snippet.Title)
 		}
-		fmt.Println(something)
 	}
 
-	RelatedVideoGenerate(service, something)
+	RelatedVideoGenerate(service, videos)
 }
 
-func RelatedVideoGenerate(service *youtube.Service, videoPass string) {
-	call2 := service.Search.List([]string{"id,snippet"}).RelatedToVideoId(videoPass).Type("video")
-	response, err := call2.Do()
-	HandleError(err, "")
-	for _, item := range response.Items {
-		fmt.Printf("%s \n %s", item.Snippet.Title, item.Id.VideoId)
-		fmt.Printf("\n\n")
+func RelatedVideoGenerate(service *youtube.Service, videoPass map[string]string) {
+	user := &Users{}
+	for key := range videoPass {
+		call2 := service.Search.List([]string{"id,snippet"}).RelatedToVideoId(key).Type("video").MaxResults(*maxResults)
+		response, err := call2.Do()
+		HandleError(err, "")
+		for _, item := range response.Items {
+			//CurrentVideos = append(CurrentVideos, item.Id.VideoId)
+
+			data := &Respond{}
+			data.SetResponse(item.Id.VideoId, item.Snippet.Thumbnails.Default.Url, item.Snippet.Title)
+
+			user.AddVideo(data)
+			//UserData.Searches = append(UserData.Searches, data)
+		}
+
 	}
+
+	fmt.Println(user.Searches)
 }
 
 func HandleError(err error, message string) string {
