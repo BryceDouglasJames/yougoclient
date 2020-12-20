@@ -48,6 +48,27 @@ func main() {
 
 	/*************HANDLE*************/
 
+	/*router := mux.NewRouter()
+
+	fs := http.FileServer(http.Dir("./site"))
+	router.Handle("/", fs)
+	router.HandleFunc("/hello", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode("Hello world!")
+		fmt.Fprint(w)
+	})
+	search := &modules.SearchRequest{ID: "nil"}
+	router.HandleFunc("/query", search.SearchHandler).Methods("GET", "POST")
+	log.Fatal(http.ListenAndServe(":8080", router))
+
+	/*user := &modules.Users{}
+	data := &modules.Respond{}
+	data.SetResponse("Hey", "Oh", "awkward")
+	user.AddVideo(data)
+	user.AddVideo(data)
+	user.AddVideo(data)
+	user.AddVideo(data)*/
+
 	fs := http.FileServer(http.Dir("./site"))
 	http.Handle("/", fs)
 
@@ -55,8 +76,17 @@ func main() {
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode("Hello world!")
 		fmt.Fprint(w)
-
 	})
+
+	/*user := modules.Users{}
+	fmt.Println(user.Searches)
+
+	data := &modules.Respond{}
+	data.SetResponse("Hey", "Oh", "awkward")
+	user.AddVideo(data)
+	user.AddVideo(data)*/
+
+	//http.HandleFunc("/videos", user.ServeArray)
 
 	//handler for search results
 	search := &modules.SearchRequest{ID: "nil"}

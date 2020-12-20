@@ -7,6 +7,10 @@ import (
 	"net/http"
 )
 
+type RequestResponseFormat struct {
+	Message string `json:"message"`
+}
+
 func (h *SearchRequest) SearchHandler(w http.ResponseWriter, r *http.Request) {
 	var data SearchRequest
 
@@ -39,17 +43,22 @@ func (h *SearchRequest) SearchHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		//response write the payload
-		fmt.Fprintln(w, data)
-		h.ID = data.ID
+		//w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		w.Header().Set("Content-Type", "application/json")
+		h.SetRequest(data.ID)
+		fmt.Fprintln(w, h.GetRequest())
 
 	case "GET":
 		//create response payload, post to page
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(h.ID)
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		json.NewEncoder(w).Encode(h.GetRequest())
 		fmt.Fprint(w)
 	}
 }
 
-func ServeStaticSite(w http.ResponseWriter, r *http.Request) {
-
+func (h *Users) ServeArray(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(h.Searches)
+	fmt.Fprint(w)
 }

@@ -21,7 +21,7 @@ var (
 	//CurrentVideos = []string{}
 	seq        = 1
 	query      = flag.String("query", "pewdiepie", "Search term")
-	maxResults = flag.Int64("max-results", 4, "Max YouTube results")
+	maxResults = flag.Int64("max-results", 5, "Max YouTube results")
 )
 
 func CreateClient(ctx context.Context, config *oauth2.Config) *http.Client {
@@ -116,18 +116,14 @@ func RelatedVideoGenerate(service *youtube.Service, videoPass map[string]string)
 		response, err := call2.Do()
 		HandleError(err, "")
 		for _, item := range response.Items {
-			//CurrentVideos = append(CurrentVideos, item.Id.VideoId)
-
 			data := &Respond{}
 			data.SetResponse(item.Id.VideoId, item.Snippet.Thumbnails.Default.Url, item.Snippet.Title)
-
 			user.AddVideo(data)
-			//UserData.Searches = append(UserData.Searches, data)
 		}
-
 	}
 
-	fmt.Println(user.Searches)
+	http.HandleFunc("/videos", user.ServeArray)
+	log.Fatal(http.ListenAndServe(":8081", nil))
 }
 
 func HandleError(err error, message string) string {

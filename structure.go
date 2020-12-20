@@ -8,8 +8,9 @@ type Users struct {
 
 func (h *Users) AddUser() {}
 
-func (h *Users) AddVideo(data *Respond) {
+func (h *Users) AddVideo(data *Respond) *Users {
 	h.Searches = append(h.Searches, data)
+	return h
 }
 
 //Respond used for storing video information
@@ -27,5 +28,14 @@ func (h *Respond) SetResponse(vid string, pic string, title string) {
 
 //SearchRequest used for user search
 type SearchRequest struct {
-	ID string `json:"id"`
+	ID string
+}
+
+func (h *SearchRequest) SetRequest(name string) *SearchRequest {
+	h.ID = name
+	return h
+}
+
+func (h *SearchRequest) GetRequest() string {
+	return h.ID
 }
