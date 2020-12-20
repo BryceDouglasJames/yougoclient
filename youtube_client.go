@@ -89,7 +89,7 @@ func SaveToken(filename string, token *oauth2.Token) {
 }
 
 /*YOUTUBE QUERY FUNCTION*/
-func SearchQuery(service *youtube.Service) {
+func SearchQuery(service *youtube.Service) map[string]string {
 	call := service.Search.List([]string{"id,snippet"}).Q(*query).MaxResults(*maxResults)
 	response, err := call.Do()
 	HandleError(err, "")
@@ -106,10 +106,10 @@ func SearchQuery(service *youtube.Service) {
 		}
 	}
 
-	RelatedVideoGenerate(service, videos)
+	return videos
 }
 
-func RelatedVideoGenerate(service *youtube.Service, videoPass map[string]string) {
+func RelatedVideoGenerate(service *youtube.Service, videoPass map[string]string) *Users {
 	user := &Users{}
 	for key := range videoPass {
 		call2 := service.Search.List([]string{"id,snippet"}).RelatedToVideoId(key).Type("video").MaxResults(*maxResults)
@@ -121,9 +121,7 @@ func RelatedVideoGenerate(service *youtube.Service, videoPass map[string]string)
 			user.AddVideo(data)
 		}
 	}
-
-	http.HandleFunc("/videos", user.ServeArray)
-	log.Fatal(http.ListenAndServe(":8081", nil))
+	return user
 }
 
 func HandleError(err error, message string) string {

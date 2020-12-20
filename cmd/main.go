@@ -44,8 +44,11 @@ func main() {
 	modules.HandleError(err, "Error creating YouTube client")
 
 	//instantiate API query
-	modules.SearchQuery(service)
+	videos := modules.SearchQuery(service)
 
+	userProps := modules.RelatedVideoGenerate(service, videos)
+
+	fmt.Println(userProps.Searches)
 	/*************HANDLE*************/
 
 	/*router := mux.NewRouter()
@@ -59,15 +62,7 @@ func main() {
 	})
 	search := &modules.SearchRequest{ID: "nil"}
 	router.HandleFunc("/query", search.SearchHandler).Methods("GET", "POST")
-	log.Fatal(http.ListenAndServe(":8080", router))
-
-	/*user := &modules.Users{}
-	data := &modules.Respond{}
-	data.SetResponse("Hey", "Oh", "awkward")
-	user.AddVideo(data)
-	user.AddVideo(data)
-	user.AddVideo(data)
-	user.AddVideo(data)*/
+	log.Fatal(http.ListenAndServe(":8080", router))*/
 
 	fs := http.FileServer(http.Dir("./site"))
 	http.Handle("/", fs)
@@ -78,15 +73,7 @@ func main() {
 		fmt.Fprint(w)
 	})
 
-	/*user := modules.Users{}
-	fmt.Println(user.Searches)
-
-	data := &modules.Respond{}
-	data.SetResponse("Hey", "Oh", "awkward")
-	user.AddVideo(data)
-	user.AddVideo(data)*/
-
-	//http.HandleFunc("/videos", user.ServeArray)
+	http.HandleFunc("/videos", userProps.ServeArray)
 
 	//handler for search results
 	search := &modules.SearchRequest{ID: "nil"}
