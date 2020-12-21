@@ -44,21 +44,44 @@ func (h *SearchRequest) SearchHandler(w http.ResponseWriter, r *http.Request) {
 
 		//response write the payload
 		//w.Header().Set("Content-Type", "text/html; charset=utf-8")
+
 		w.Header().Set("Content-Type", "application/json")
 		h.SetRequest(data.ID)
 		fmt.Fprintln(w, h.GetRequest())
 
 	case "GET":
 		//create response payload, post to page
+		response, err := json.Marshal(h)
+		if err != nil {
+			w.WriteHeader(401)
+			w.Write([]byte(err.Error()))
+			fmt.Println()
+			return
+		}
+
+		//w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		w.Header().Set("Content-Type", "application/json")
 		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Credentials", "true")
 		json.NewEncoder(w).Encode(h.GetRequest())
 		fmt.Fprint(w)
+
+		w.Write(response)
 	}
 }
 
 func (h *Users) ServeArray(w http.ResponseWriter, r *http.Request) {
+
+	response, err := json.Marshal(h)
+	if err != nil {
+		w.WriteHeader(401)
+		w.Write([]byte(err.Error()))
+		fmt.Println()
+		return
+	}
+
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(h.Searches)
-	fmt.Fprint(w)
+	//json.NewEncoder(w).Encode(h.Searches)
+	//fmt.Fprint(w)
+	w.Write(response)
 }
