@@ -20,7 +20,7 @@ var (
 	//users      = map[int]*User{}
 	//CurrentVideos = []string{}
 	seq        = 1
-	query      = flag.String("query", "pewdiepie", "Search term")
+	query      = flag.String("query", "java", "Search term")
 	maxResults = flag.Int64("max-results", 5, "Max YouTube results")
 )
 
@@ -90,6 +90,8 @@ func SaveToken(filename string, token *oauth2.Token) {
 
 /*YOUTUBE QUERY FUNCTION*/
 func SearchQuery(service *youtube.Service) map[string]string {
+	//var query = flag.String("query", search.ID, "Search term")
+	//flag.Set(search.ID, search.ID)
 	call := service.Search.List([]string{"id,snippet"}).Q(*query).MaxResults(*maxResults)
 	response, err := call.Do()
 	HandleError(err, "")
@@ -116,9 +118,15 @@ func RelatedVideoGenerate(service *youtube.Service, videoPass map[string]string)
 		response, err := call2.Do()
 		HandleError(err, "")
 		for _, item := range response.Items {
+			fmt.Println(item.Id.VideoId)
+			fmt.Println(item.Snippet.Thumbnails.Default.Url)
+			fmt.Println(item.Snippet.Title)
+
 			data := &Respond{}
 			data.SetResponse(item.Id.VideoId, item.Snippet.Thumbnails.Default.Url, item.Snippet.Title)
 			user.AddVideo(data)
+			fmt.Println(data)
+			data.ClearResponse()
 		}
 	}
 	return user
@@ -133,4 +141,8 @@ func HandleError(err error, message string) string {
 	}
 
 	return string(message)
+}
+
+func NewClient() {
+
 }

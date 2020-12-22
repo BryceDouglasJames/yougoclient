@@ -13,7 +13,6 @@ type RequestResponseFormat struct {
 
 func (h *SearchRequest) SearchHandler(w http.ResponseWriter, r *http.Request) {
 	var data SearchRequest
-
 	switch r.Method {
 	case "POST":
 		//request buffer 100 KB
@@ -41,9 +40,6 @@ func (h *SearchRequest) SearchHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, msg, http.StatusBadRequest)
 			return
 		}
-
-		//response write the payload
-		//w.Header().Set("Content-Type", "text/html; charset=utf-8")
 
 		w.Header().Set("Content-Type", "application/json")
 		h.SetRequest(data.ID)
