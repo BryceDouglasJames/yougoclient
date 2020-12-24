@@ -11,8 +11,10 @@ type RequestResponseFormat struct {
 	Message string `json:"message"`
 }
 
-func (h *SearchRequest) SearchHandler(w http.ResponseWriter, r *http.Request) {
+func (h *Users) SearchHandler(w http.ResponseWriter, r *http.Request) {
 	var data SearchRequest
+	//ThisClient := &YoutubeClient{}
+
 	switch r.Method {
 	case "POST":
 		//request buffer 100 KB
@@ -41,34 +43,37 @@ func (h *SearchRequest) SearchHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		CurrentSearch = data.ID
+
+		finished := make(chan bool)
+		go worker(finished)
+		<-finished
+
+		fmt.Println("Main: Completed")
+
 		w.Header().Set("Content-Type", "application/json")
-		h.SetRequest(data.ID)
-		fmt.Fprintln(w, h.GetRequest())
+		fmt.Fprintln(w, data.ID)
 
 	case "GET":
 		//create response payload, post to page
-		response, err := json.Marshal(h)
+		response, err := json.Marshal(h.Searches)
 		if err != nil {
 			w.WriteHeader(401)
 			w.Write([]byte(err.Error()))
 			fmt.Println()
 			return
 		}
-
-		//w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		w.Header().Set("Content-Type", "application/json")
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Access-Control-Allow-Credentials", "true")
-		json.NewEncoder(w).Encode(h.GetRequest())
-		fmt.Fprint(w)
-
+		json.NewEncoder(w).Encode(response)
 		w.Write(response)
 	}
 }
 
 func (h *Users) ServeArray(w http.ResponseWriter, r *http.Request) {
 
-	response, err := json.Marshal(h)
+	response, err := json.Marshal(h.Searches)
 	if err != nil {
 		w.WriteHeader(401)
 		w.Write([]byte(err.Error()))
@@ -77,7 +82,5 @@ func (h *Users) ServeArray(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	//json.NewEncoder(w).Encode(h.Searches)
-	//fmt.Fprint(w)
 	w.Write(response)
 }

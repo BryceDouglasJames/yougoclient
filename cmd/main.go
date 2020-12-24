@@ -1,70 +1,83 @@
 package main
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
+	"sync"
+	"time"
 
 	modules "github.com/brycedouglasjames/yougoclient"
-	"golang.org/x/oauth2/google"
-	"google.golang.org/api/youtube/v3"
 )
 
 var (
-	Search      string
-	ClientArray []*modules.Users
+	CurrentUsers []*modules.Users
+	Refresh      sync.RWMutex
+	UserCache    []*modules.Users
+	returnobj    []*modules.Respond
 )
 
 func main() {
-	//create context for the client to run on
-	ctx := context.Background()
 
-	//grab API Key from JSON file
-	b, err := ioutil.ReadFile("client_secret.json")
-	if err != nil {
-		log.Fatalf("Unable to read client secret file: %v", err)
-	}
+	go RefreshSearch()
 
-	//grab service config
-	config, err := google.ConfigFromJSON(b, youtube.YoutubeReadonlyScope)
-	if err != nil {
-		log.Fatalf("Unable to parse client secret file to config: %v", err)
-	}
-
-	//create API client
-	client := modules.CreateClient(ctx, config)
-
-	//run youtube service
-	service, err := youtube.New(client)
-
-	//catch if an error occurs
-	modules.HandleError(err, "Error creating YouTube client")
-
-	//instantiate API query
-	videos := modules.SearchQuery(service)
-
-	userProps := modules.RelatedVideoGenerate(service, videos)
-
-	fmt.Println(userProps.Searches)
-
-	fs := http.FileServer(http.Dir("./site"))
+	fs := http.FileServer(http.Dir("./build"))
 	http.Handle("/", fs)
 
 	http.HandleFunc("/hello", func(w http.ResponseWriter, r *http.Request) {
+		Refresh.RLock()
+		defer Refresh.RUnlock()
+
+		response, err := json.Marshal(UserCache)
+		if err != nil {
+			w.WriteHeader(401)
+			w.Write([]byte(err.Error()))
+			fmt.Println()
+			return
+		}
+
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode("Hello world!")
-		fmt.Fprint(w)
+		fmt.Fprintln(w, string(response))
+
 	})
 
-	http.HandleFunc("/videos", userProps.ServeArray)
+	ThisClient := &modules.Users{}
+	http.HandleFunc("/videos", ThisClient.ServeArray)
 
 	//handler for search results
-	search := &modules.SearchRequest{ID: "Help"}
+	search := &modules.Users{}
 	http.HandleFunc("/query", search.SearchHandler)
+
 	log.Fatal(http.ListenAndServe(":8080", nil))
+
+}
+
+func RefreshSearch() {
+	for {
+		Refresh.Lock()
+
+		returnobj = nil
+		UserCache = nil
+
+		temp := &modules.Users{}
+		temp.UserName = "Bryce"
+
+		for _, item := range modules.UserSearch {
+			data := &modules.Respond{
+				VideoID:      item.VideoID,
+				ThumbnailURL: item.ThumbnailURL,
+				VideoTitle:   item.VideoTitle,
+			}
+			returnobj = append(returnobj, data)
+			temp.Searches = append(temp.Searches, data)
+		}
+
+		UserCache = append(UserCache, temp)
+
+		Refresh.Unlock()
+		time.Sleep(1 * time.Second)
+	}
 }
 
 //TODO user integration

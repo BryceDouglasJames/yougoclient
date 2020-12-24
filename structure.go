@@ -1,14 +1,23 @@
 package yougoclient
 
+var (
+	CurrentSearch      string
+	CurrentSearchIndex = 0
+	ClientCall         [100]*Users
+
+	UserSearch []*Respond
+)
+
 //User struct for user presets
 type Users struct {
-	UserName []string
+	UserName string
 	Searches []*Respond
 }
 
 //func (h *Users) AddUser() {}
 
 func (h *Users) AddVideo(data *Respond) *Users {
+
 	h.Searches = append(h.Searches, data)
 	return h
 }
@@ -20,10 +29,11 @@ type Respond struct {
 	VideoTitle   string
 }
 
-func (h *Respond) SetResponse(vid string, pic string, title string) {
+func (h *Respond) SetResponse(vid string, pic string, title string) *Respond {
 	h.VideoID = vid
 	h.ThumbnailURL = pic
 	h.VideoTitle = title
+	return h
 }
 
 func (h *Respond) ClearResponse() {
@@ -45,43 +55,3 @@ func (h *SearchRequest) SetRequest(name string) *SearchRequest {
 func (h *SearchRequest) GetRequest() string {
 	return h.ID
 }
-
-/*//SearchQuery Something
-type Query struct {
-	search *string
-}
-
-func (h *Query) ChangeQuery(query *string) *Query {
-	h.search = query
-	return h
-}
-
-func (h *Query) GetQuery() *Query {
-	return h
-}
-
-type YouService struct {
-	service *youtube.Service
-}
-
-func (h *YouService) SetService(s *youtube.Service) *YouService {
-	h.service = s
-	return h
-}
-
-func (h *YouService) GetService() *youtube.Service {
-	return h.service
-}
-
-type ThisClient struct {
-	client *http.Client
-}
-
-func (h *ThisClient) SetClient(c *http.Client) *ThisClient {
-	h.client = c
-	return h
-}
-
-func (h *ThisClient) GetClient() *http.Client {
-	return h.client
-}*/

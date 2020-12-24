@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
@@ -13,6 +14,7 @@ import (
 	"path/filepath"
 
 	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/google"
 	"google.golang.org/api/youtube/v3"
 )
 
@@ -21,7 +23,7 @@ var (
 	//CurrentVideos = []string{}
 	seq        = 1
 	query      = flag.String("query", "java", "Search term")
-	maxResults = flag.Int64("max-results", 5, "Max YouTube results")
+	maxResults = flag.Int64("max-results", 1, "Max YouTube results")
 )
 
 func CreateClient(ctx context.Context, config *oauth2.Config) *http.Client {
@@ -89,10 +91,8 @@ func SaveToken(filename string, token *oauth2.Token) {
 }
 
 /*YOUTUBE QUERY FUNCTION*/
-func SearchQuery(service *youtube.Service) map[string]string {
-	//var query = flag.String("query", search.ID, "Search term")
-	//flag.Set(search.ID, search.ID)
-	call := service.Search.List([]string{"id,snippet"}).Q(*query).MaxResults(*maxResults)
+func SearchQuery(service *youtube.Service, search string) map[string]string {
+	call := service.Search.List([]string{"id,snippet"}).Q(CurrentSearch).MaxResults(int64(2))
 	response, err := call.Do()
 	HandleError(err, "")
 
@@ -104,7 +104,8 @@ func SearchQuery(service *youtube.Service) map[string]string {
 		switch item.Id.Kind {
 		case "youtube#video":
 			videos[item.Id.VideoId] = item.Snippet.Title
-			//fmt.Printf("%s", item.Snippet.Title)
+			fmt.Printf("%s", item.Snippet.Title)
+			fmt.Println(item.Snippet.Title)
 		}
 	}
 
@@ -113,20 +114,28 @@ func SearchQuery(service *youtube.Service) map[string]string {
 
 func RelatedVideoGenerate(service *youtube.Service, videoPass map[string]string) *Users {
 	user := &Users{}
+	//var wait = time.Duration(3000)
+
 	for key := range videoPass {
-		call2 := service.Search.List([]string{"id,snippet"}).RelatedToVideoId(key).Type("video").MaxResults(*maxResults)
+		call2 := service.Search.List([]string{"id, snippet"}).RelatedToVideoId(key).Type("video").MaxResults(*maxResults)
 		response, err := call2.Do()
 		HandleError(err, "")
 		for _, item := range response.Items {
+
 			fmt.Println(item.Id.VideoId)
-			fmt.Println(item.Snippet.Thumbnails.Default.Url)
+			//fmt.Println(item.Snippet.Thumbnails.Default.Url)
 			fmt.Println(item.Snippet.Title)
 
-			data := &Respond{}
-			data.SetResponse(item.Id.VideoId, item.Snippet.Thumbnails.Default.Url, item.Snippet.Title)
-			user.AddVideo(data)
-			fmt.Println(data)
-			data.ClearResponse()
+			data := &Respond{
+				VideoID:      item.Id.VideoId,
+				ThumbnailURL: item.Id.VideoId,
+				VideoTitle:   item.Snippet.Title,
+			}
+
+			//data = data.SetResponse(item.Id.VideoId, item.Snippet.Thumbnails.Default.Url, item.Snippet.Title)
+
+			UserSearch = append(UserSearch, data)
+			//data.ClearResponse()
 		}
 	}
 	return user
@@ -144,5 +153,33 @@ func HandleError(err error, message string) string {
 }
 
 func NewClient() {
+	ctx := context.Background()
+
+	//grab API Key from JSON file
+	b, err := ioutil.ReadFile("client_secret.json")
+	if err != nil {
+		log.Fatalf("Unable to read client secret file: %v", err)
+	}
+
+	//grab service config
+	config, err := google.ConfigFromJSON(b, youtube.YoutubeReadonlyScope)
+
+	if err != nil {
+		log.Fatalf("Unable to parse client secret file to config: %v", err)
+	}
+
+	//create API client
+	client := CreateClient(ctx, config)
+
+	//run youtube service
+	service, err := youtube.New(client)
+
+	//catch if an error occurs
+	HandleError(err, "Error creating YouTube client")
+
+	//instantiate API query
+	videos := SearchQuery(service, CurrentSearch)
+
+	RelatedVideoGenerate(service, videos)
 
 }
