@@ -114,8 +114,6 @@ func SearchQuery(service *youtube.Service, search string) map[string]string {
 
 func RelatedVideoGenerate(service *youtube.Service, videoPass map[string]string) *Users {
 	user := &Users{}
-	//var wait = time.Duration(3000)
-
 	for key := range videoPass {
 		call2 := service.Search.List([]string{"id, snippet"}).RelatedToVideoId(key).Type("video").MaxResults(*maxResults)
 		response, err := call2.Do()
@@ -123,7 +121,6 @@ func RelatedVideoGenerate(service *youtube.Service, videoPass map[string]string)
 		for _, item := range response.Items {
 
 			fmt.Println(item.Id.VideoId)
-			//fmt.Println(item.Snippet.Thumbnails.Default.Url)
 			fmt.Println(item.Snippet.Title)
 
 			data := &Respond{
@@ -131,11 +128,7 @@ func RelatedVideoGenerate(service *youtube.Service, videoPass map[string]string)
 				ThumbnailURL: item.Id.VideoId,
 				VideoTitle:   item.Snippet.Title,
 			}
-
-			//data = data.SetResponse(item.Id.VideoId, item.Snippet.Thumbnails.Default.Url, item.Snippet.Title)
-
 			UserSearch = append(UserSearch, data)
-			//data.ClearResponse()
 		}
 	}
 	return user
@@ -182,4 +175,11 @@ func NewClient() {
 
 	RelatedVideoGenerate(service, videos)
 
+}
+
+func NewUser(name string) {
+	tempUser := &Users{
+		UserName: name,
+	}
+	ClientList = append(ClientList, tempUser)
 }

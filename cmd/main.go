@@ -12,8 +12,10 @@ import (
 )
 
 var (
+	Refresh sync.RWMutex
+	AddUser sync.RWMutex
+
 	CurrentUsers []*modules.Users
-	Refresh      sync.RWMutex
 	UserCache    []*modules.Users
 	returnobj    []*modules.Respond
 )
@@ -21,6 +23,7 @@ var (
 func main() {
 
 	go RefreshSearch()
+	go CreateUser()
 
 	fs := http.FileServer(http.Dir("./build"))
 	http.Handle("/", fs)
@@ -29,7 +32,7 @@ func main() {
 		Refresh.RLock()
 		defer Refresh.RUnlock()
 
-		response, err := json.Marshal(UserCache)
+		response, err := json.Marshal(CurrentUsers)
 		if err != nil {
 			w.WriteHeader(401)
 			w.Write([]byte(err.Error()))
@@ -42,8 +45,27 @@ func main() {
 
 	})
 
-	ThisClient := &modules.Users{}
-	http.HandleFunc("/videos", ThisClient.ServeArray)
+	http.HandleFunc("/user", func(w http.ResponseWriter, r *http.Request) {
+		AddUser.RLock()
+		defer AddUser.RUnlock()
+
+		response, err := json.Marshal(CurrentUsers)
+		if err != nil {
+			w.WriteHeader(401)
+			w.Write([]byte(err.Error()))
+			fmt.Println()
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		fmt.Fprintln(w, string(response))
+	})
+
+	user := &modules.Users{}
+	http.HandleFunc("/userpass", user.AddUser)
+
+	videos := &modules.Users{}
+	http.HandleFunc("/videos", videos.ServeArray)
 
 	//handler for search results
 	search := &modules.Users{}
@@ -80,9 +102,37 @@ func RefreshSearch() {
 	}
 }
 
+func CreateUser() {
+	for {
+		AddUser.Lock()
+
+		CurrentUsers = modules.ClientList
+		/*tempCurrentUsers := CurrentUsers
+		CurrentUsers = nil
+
+		for _, user := range modules.ClientList {
+			var pass = true
+			thisName := user.UserName
+			for _, client := range tempCurrentUsers {
+				if thisName == client.UserName {
+					pass = false
+				}
+			}
+
+			if pass {
+				CurrentUsers = append(CurrentUsers, user)
+			}
+		}
+		*/
+		AddUser.Unlock()
+		time.Sleep(1 * time.Second)
+
+	}
+}
+
 //TODO user integration
 /*func updateClient() {}
 func stopClient()   {}
-func createUser() {}
+
 func deleteUser() {}
 func updateSuer() {}*/

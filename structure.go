@@ -3,7 +3,8 @@ package yougoclient
 var (
 	CurrentSearch      string
 	CurrentSearchIndex = 0
-	ClientCall         [100]*Users
+	ClientList         []*Users
+	PASSFLAG           = 0
 
 	UserSearch []*Respond
 )
@@ -54,4 +55,8 @@ func (h *SearchRequest) SetRequest(name string) *SearchRequest {
 
 func (h *SearchRequest) GetRequest() string {
 	return h.ID
+}
+
+type UserAdd struct {
+	ID string
 }
