@@ -12,6 +12,7 @@ import (
 	"os"
 	"os/user"
 	"path/filepath"
+	"time"
 
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
@@ -92,7 +93,7 @@ func SaveToken(filename string, token *oauth2.Token) {
 
 /*YOUTUBE QUERY FUNCTION*/
 func SearchQuery(service *youtube.Service, search string) map[string]string {
-	call := service.Search.List([]string{"id,snippet"}).Q(CurrentSearch).MaxResults(int64(2))
+	call := service.Search.List([]string{"id,snippet"}).Q(CurrentSearch).MaxResults(int64(5))
 	response, err := call.Do()
 	HandleError(err, "")
 
@@ -115,20 +116,24 @@ func SearchQuery(service *youtube.Service, search string) map[string]string {
 func RelatedVideoGenerate(service *youtube.Service, videoPass map[string]string) *Users {
 	user := &Users{}
 	for key := range videoPass {
-		call2 := service.Search.List([]string{"id, snippet"}).RelatedToVideoId(key).Type("video").MaxResults(*maxResults)
+		call2 := service.Search.List([]string{"id, snippet"}).RelatedToVideoId(key).Type("video").MaxResults(int64(1))
 		response, err := call2.Do()
 		HandleError(err, "")
 		for _, item := range response.Items {
 
-			fmt.Println(item.Id.VideoId)
-			fmt.Println(item.Snippet.Title)
+			time.Sleep(1 * time.Second)
+			//som := *&youtube.SearchResult{}
+			if item.Snippet != nil {
+				fmt.Println("+++" + item.Id.VideoId + "+++")
+				fmt.Println(item.Snippet.Title)
 
-			data := &Respond{
-				VideoID:      item.Id.VideoId,
-				ThumbnailURL: item.Id.VideoId,
-				VideoTitle:   item.Snippet.Title,
+				data := &Respond{
+					VideoID:      item.Id.VideoId,
+					ThumbnailURL: item.Id.VideoId,
+					VideoTitle:   item.Snippet.Title,
+				}
+				UserSearch = append(UserSearch, data)
 			}
-			UserSearch = append(UserSearch, data)
 		}
 	}
 	return user
@@ -174,12 +179,30 @@ func NewClient() {
 	videos := SearchQuery(service, CurrentSearch)
 
 	RelatedVideoGenerate(service, videos)
-
+	/*data := &Respond{
+		VideoID:      "PLZ",
+		ThumbnailURL: "KILL",
+		VideoTitle:   "HELLO",
+	}
+	UserSearch = append(UserSearch, data)*/
+	fmt.Println(UserSearch)
 }
 
 func NewUser(name string) {
 	tempUser := &Users{
-		UserName: name,
+		UserName:    name,
+		SessionTime: 0,
 	}
 	ClientList = append(ClientList, tempUser)
+}
+
+func DeleteUser(name string) {
+	fmt.Println("THIS IS THE NAME " + name)
+	tempList := ClientList
+	ClientList = nil
+	for _, user := range tempList {
+		if user.UserName != name {
+			ClientList = append(ClientList, user)
+		}
+	}
 }

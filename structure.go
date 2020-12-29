@@ -6,13 +6,20 @@ var (
 	ClientList         []*Users
 	PASSFLAG           = 0
 
-	UserSearch []*Respond
+	UserSearch  []*Respond
+	UserRequest string
+
+	AmountOfUsers = 0
+
+	FinishedSearch = false
 )
 
 //User struct for user presets
 type Users struct {
-	UserName string
-	Searches []*Respond
+	UserIndex   int        `json:"UserIndex"`
+	UserName    string     `json:"UserName"`
+	Searches    []*Respond `json:"Searches"`
+	SessionTime int        `json:"SessionTime"`
 }
 
 //func (h *Users) AddUser() {}
@@ -45,7 +52,8 @@ func (h *Respond) ClearResponse() {
 
 //SearchRequest used for user search
 type SearchRequest struct {
-	ID string
+	ID   string
+	User string
 }
 
 func (h *SearchRequest) SetRequest(name string) *SearchRequest {

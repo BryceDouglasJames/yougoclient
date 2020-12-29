@@ -12,6 +12,7 @@ func worker(finished chan bool) {
 }
 
 func adduser(finished chan bool, name string) {
+	AmountOfUsers++
 	fmt.Println("Adding new user..." + name)
 	NewUser(name)
 	fmt.Println("User added")

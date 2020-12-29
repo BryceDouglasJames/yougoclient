@@ -43,10 +43,12 @@ func (h *Users) SearchHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		CurrentSearch = data.ID
+		UserRequest = data.User
 
 		finished := make(chan bool)
 		go worker(finished)
 		<-finished
+		FinishedSearch = true
 		fmt.Println("Main: Completed")
 
 		//w.Header().Set("Content-Type", "application/json")
@@ -99,6 +101,7 @@ func (h *Users) AddUser(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		//TODO HANDLE THIS
 		for _, user := range ClientList {
 			if user.UserName == data.ID {
 				w.WriteHeader(401)
@@ -134,7 +137,7 @@ func (h *Users) AddUser(w http.ResponseWriter, r *http.Request) {
 
 func (h *Users) ServeArray(w http.ResponseWriter, r *http.Request) {
 
-	response, err := json.Marshal(h.Searches)
+	response, err := json.Marshal(h)
 	if err != nil {
 		w.WriteHeader(401)
 		w.Write([]byte(err.Error()))
