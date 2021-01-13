@@ -26,17 +26,21 @@ type RetrieveUserProfile struct {
 
 func main() {
 
+	//START CONCURRENT ROUTINES
 	go RefreshSearch()
 	go CreateUser()
 
+	//run file server
 	fs := http.FileServer(http.Dir("./build"))
 	http.Handle("/", fs)
 
-	http.HandleFunc("/hello", func(w http.ResponseWriter, r *http.Request) {
+	//handler for responding to search queries
+	http.HandleFunc("/userbank/1999", func(w http.ResponseWriter, r *http.Request) {
 		Refresh.RLock()
 		defer Refresh.RUnlock()
 
 		switch r.Method {
+		//POSTS USER UPDATES
 		case "POST":
 			//request buffer 100 KB
 			r.Body = http.MaxBytesReader(w, r.Body, 100000)
@@ -82,6 +86,7 @@ func main() {
 			w.Header().Set("Content-Type", "application/json")
 			w.Write(response)
 
+		//GET ALL USERS 			MAYBE CHANGE THIS
 		case "GET":
 			response, err := json.Marshal(CurrentUsers)
 			if err != nil {
@@ -96,6 +101,7 @@ func main() {
 		}
 	})
 
+	//handles new session clients
 	http.HandleFunc("/user", func(w http.ResponseWriter, r *http.Request) {
 		AddUser.RLock()
 		defer AddUser.RUnlock()
@@ -126,9 +132,14 @@ func main() {
 
 }
 
+//Concurrent call for pushing searches to called user. Very convoluted.
+//This function is flawed. Query collisions WILL occur if there are 2 requests simultaneously.
+//Needs better solution
 func RefreshSearch() {
 	for {
 		Refresh.Lock()
+
+		//delete user if their ttl is expired
 		for _, user := range modules.ClientList {
 			user.SessionTime = user.SessionTime + 1000
 			if user.SessionTime >= 60000 {
@@ -136,6 +147,8 @@ func RefreshSearch() {
 			}
 		}
 
+		//loops through and sends results back to selected user.
+		//Could very well be optimized this method is overly forced.
 		if modules.FinishedSearch == true {
 			for k, user := range modules.ClientList {
 				if user.UserName == modules.UserRequest {
@@ -159,49 +172,27 @@ func RefreshSearch() {
 				}
 			}
 
+			//clear global buffers
 			modules.CurrentSearch = ""
 			modules.UserRequest = "..."
 			modules.UserSearch = nil
-
 			modules.FinishedSearch = false
 		}
 
+		//open channel
 		Refresh.Unlock()
 		time.Sleep(3 * time.Second)
 	}
 }
 
+//concurrent function for
 func CreateUser() {
 	for {
 		AddUser.Lock()
 
 		CurrentUsers = modules.ClientList
-		/*tempCurrentUsers := CurrentUsers
-		CurrentUsers = nil
-
-		for _, user := range modules.ClientList {
-			var pass = true
-			thisName := user.UserName
-			for _, client := range tempCurrentUsers {
-				if thisName == client.UserName {
-					pass = false
-				}
-			}
-
-			if pass {
-				CurrentUsers = append(CurrentUsers, user)
-			}
-		}
-		*/
 		AddUser.Unlock()
 		time.Sleep(1 * time.Second)
 
 	}
 }
-
-//TODO user integration
-/*func updateClient() {}
-func stopClient()   {}
-
-
-func updateSuer() {}*/

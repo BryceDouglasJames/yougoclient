@@ -46,7 +46,7 @@ func (h *Users) SearchHandler(w http.ResponseWriter, r *http.Request) {
 		UserRequest = data.User
 
 		finished := make(chan bool)
-		go worker(finished)
+		go search(finished)
 		<-finished
 		FinishedSearch = true
 		fmt.Println("Main: Completed")
@@ -87,7 +87,7 @@ func (h *Users) AddUser(w http.ResponseWriter, r *http.Request) {
 		//init decoder
 		err := decoder.Decode(&data)
 		if err != nil {
-			w.WriteHeader(401)
+			w.WriteHeader(402)
 			w.Write([]byte(err.Error()))
 			fmt.Println()
 			return
@@ -98,6 +98,13 @@ func (h *Users) AddUser(w http.ResponseWriter, r *http.Request) {
 		if err != io.EOF {
 			msg := "Request body must only contain a single JSON object"
 			http.Error(w, msg, http.StatusBadRequest)
+			return
+		}
+
+		if data.ID == "" {
+			w.WriteHeader(403)
+			w.Write([]byte("Null name"))
+			fmt.Println()
 			return
 		}
 

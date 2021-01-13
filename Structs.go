@@ -5,13 +5,10 @@ var (
 	CurrentSearchIndex = 0
 	ClientList         []*Users
 	PASSFLAG           = 0
-
-	UserSearch  []*Respond
-	UserRequest string
-
-	AmountOfUsers = 0
-
-	FinishedSearch = false
+	UserSearch         []*Respond
+	UserRequest        string
+	AmountOfUsers      = 0
+	FinishedSearch     = false
 )
 
 //User struct for user presets
@@ -22,10 +19,7 @@ type Users struct {
 	SessionTime int        `json:"SessionTime"`
 }
 
-//func (h *Users) AddUser() {}
-
 func (h *Users) AddVideo(data *Respond) *Users {
-
 	h.Searches = append(h.Searches, data)
 	return h
 }
@@ -37,32 +31,10 @@ type Respond struct {
 	VideoTitle   string
 }
 
-func (h *Respond) SetResponse(vid string, pic string, title string) *Respond {
-	h.VideoID = vid
-	h.ThumbnailURL = pic
-	h.VideoTitle = title
-	return h
-}
-
-func (h *Respond) ClearResponse() {
-	h.VideoID = ""
-	h.ThumbnailURL = ""
-	h.VideoTitle = ""
-}
-
 //SearchRequest used for user search
 type SearchRequest struct {
 	ID   string
 	User string
-}
-
-func (h *SearchRequest) SetRequest(name string) *SearchRequest {
-	h.ID = name
-	return h
-}
-
-func (h *SearchRequest) GetRequest() string {
-	return h.ID
 }
 
 type UserAdd struct {
