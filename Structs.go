@@ -19,11 +19,6 @@ type Users struct {
 	SessionTime int        `json:"SessionTime"`
 }
 
-func (h *Users) AddVideo(data *Respond) *Users {
-	h.Searches = append(h.Searches, data)
-	return h
-}
-
 //Respond used for storing video information
 type Respond struct {
 	VideoID      string
